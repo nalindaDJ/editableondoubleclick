@@ -1,0 +1,26 @@
+{
+  "name": "EditableOnDoubleClick",
+  "title": "jQuery Editable on Double Click",
+  "version": "1.0.0",
+  "description": "A jQuery plugin for enabling double-click editing on HTML elements.",
+  "main": "jquery.editableondoubleclick.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nalindaDJ/editableondoubleclick"
+  },
+  "keywords": ["jQuery", "plugin", "editable", "content"],
+  "author": {
+	  "name": "Damith Nalinda jayasinghe",
+	  "email": "damith.jayasinghe@gmail.com",
+  },
+  "licenses": [
+	{
+		"type":	"MIT",
+		"url": "https://opensource.org/license/mit/",
+	}
+  ],
+  "dependencies": {
+    "jquery": ">=1.5"
+  }
+}
+
