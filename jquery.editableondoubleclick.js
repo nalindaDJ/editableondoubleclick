@@ -1,10 +1,9 @@
 /*
- * jQuery Editable On Double Click Plugin
- * Version: 1.0.0
+ * jQuery Editable On Double Click Plugin - Enhanced
+ * Version: 1.1.0
  *
- * The editableOnDoubleClick jQuery plugin presented here enhances the interactivity of HTML elements
- * by allowing users to edit their content upon double-clicking. This plugin extends jQuery's functionality
- * to provide a seamless editing experience, enabling users to update text content directly within the browser window.
+ * This plugin allows users to edit text content on double-click, with added accessibility,
+ * validation, and usability enhancements.
  *
  * @author: Damith Nalinda Jayasinghe
  * @license: MIT
@@ -14,53 +13,71 @@
     $.fn.editableOnDoubleClick = function (options) {
         const settings = $.extend({
             onSave: function (newValue) {},
-            onCancel: function () {}
+            onCancel: function () {},
+            validate: function (newValue) { return true; }, // Default to always valid
+            enableMultiline: true, // Toggle multiline support
+            shortcuts: {
+                save: 'Enter',
+                cancel: 'Escape',
+                newline: 'Shift+Enter'
+            },
+            editingClass: 'editing'
         }, options);
 
         return this.each(function () {
             let $this = $(this);
             let oldValue;
 
+            // Make the element focusable for better accessibility
+            $this.attr('tabindex', 0).attr('role', 'textbox').attr('aria-live', 'polite');
+
             $this.dblclick(function () {
                 oldValue = $this.text();
-                $this.addClass('editing').attr('contenteditable', true).focus();
+                $this.addClass(settings.editingClass).attr('contenteditable', true).focus();
             });
 
             $this.on('keydown', function (event) {
-                if (event.shiftKey && event.keyCode === 13) { // Shift+Enter keys
-					event.preventDefault();
-                    let selection = window.getSelection();
-                    let range = selection.getRangeAt(0);
-                    let br = document.createElement("br");
-                    range.deleteContents();
-                    range.insertNode(br);
-                    range.setStartAfter(br);
-                    range.setEndAfter(br);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                } else if (event.keyCode === 13) { // Enter key
+                if (settings.enableMultiline && event.shiftKey && event.key === settings.shortcuts.newline.split('+')[1]) {
                     event.preventDefault();
-                    exitEditing();
-                } else if (event.keyCode === 27) { // Escape key
-                    $this.text(oldValue);
-                    exitEditing();
+                    document.execCommand('insertLineBreak');
+                } else if (event.key === settings.shortcuts.save) {
+                    event.preventDefault();
+                    exitEditing(true);
+                } else if (event.key === settings.shortcuts.cancel) {
+                    event.preventDefault();
+                    exitEditing(false);
                 }
             });
 
-            // Save and exit editing mode when focus leaves the element
-            $this.on('blur', function() {
-                exitEditing();
+            $this.on('blur', function () {
+                exitEditing(true);
             });
 
-            function exitEditing() {
-                $this.removeClass('editing').removeAttr('contenteditable');
-                let newValue = $this.text().trim(); // Trim whitespace
-                if (newValue !== oldValue) {
-                    settings.onSave(newValue);
+            function exitEditing(save) {
+                $this.removeClass(settings.editingClass).removeAttr('contenteditable');
+                let newValue = $this.text().trim();
+
+                if (save) {
+                    if (settings.validate(newValue)) {
+                        if (newValue !== oldValue) {
+                            settings.onSave(newValue);
+                        } else {
+                            settings.onCancel();
+                        }
+                    } else {
+                        alert('Validation failed! Please correct your input.');
+                        $this.text(oldValue).focus();
+                    }
                 } else {
+                    $this.text(oldValue);
                     settings.onCancel();
                 }
             }
+
+            // Accessibility: Reset aria-live to polite when editing is complete
+            $this.on('focusout', function () {
+                $this.attr('aria-live', 'polite');
+            });
         });
     };
 }(jQuery));
